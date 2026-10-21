@@ -2,6 +2,8 @@ local NS = {}
 assert(loadfile("AzerothNotes/Data.lua"))("AzerothNotes", NS)
 local D = NS.Data
 local db = assert(D.Initialize())
+assert(db.ui.minimap == true)
+assert(D.Initialize({ ui = { minimap = false } }).ui.minimap == false)
 local a = D.Create(db, "Azeroth", "A forest and a river", 100, "Tester")
 local b = D.Create(db, "Azeroth", "A mountain", 100, "Tester")
 assert(a.id ~= b.id and b.title == "Azeroth (2)")

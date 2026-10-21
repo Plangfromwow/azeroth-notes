@@ -7,7 +7,7 @@ inputs and scrollbars, with a parchment reading page and a quiet source editor.
 ## Open the journal
 
 - `/anotes` toggles the window.
-- `/anotes minimap` shows or hides the optional minimap book, initially hidden.
+- `/anotes minimap` shows or hides the minimap book, visible by default.
 - Bind **Azeroth Notes: Open / close journal** in the game's keybinding settings.
 - Escape closes the journal. Drag the frame to move it; drag its lower-right corner
   to resize. Position, size and reading mode persist.

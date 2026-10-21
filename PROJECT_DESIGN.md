@@ -36,8 +36,8 @@ The addon must remain useful on its own when that companion is absent.
 ## Experience and visual direction
 
 The player opens one journal window through a configurable keybinding, a slash
-command (`/anotes`), or an optional minimap book button. The minimap button should
-be off by default. Closing the journal leaves no persistent panel on screen.
+command (`/anotes`), or a minimap book button, visible by default with an option to
+hide it. Closing the journal leaves no persistent panel on screen.
 
 Use restrained Blizzard-style framing, readable text, and warm parchment tones
 where practical. Keep the page central and the controls compact. Avoid permanent
@@ -231,7 +231,7 @@ resolution. Test interruption and recovery before enabling automatic imports.
 
 - Install and load in the actual WoW Forever client without Lua errors.
 - Open and close using `/anotes`, the keybinding, and the optional minimap button.
-- Start with no persistent journal UI or minimap icon unless explicitly enabled.
+- Start with a minimap book icon and no open journal window. Allow hiding the icon.
 - Create, rename, edit, search, tag, trash, and restore notes.
 - Verify every documented Markdown feature in Read mode; unsupported input remains
   visible and harmless.

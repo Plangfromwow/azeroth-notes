@@ -17,6 +17,7 @@ function D.Initialize(saved)
     db.schemaVersion = VERSION
     db.notes = db.notes or {}
     db.ui = db.ui or {}
+    if db.ui.minimap == nil then db.ui.minimap = true end
     db.nextID = db.nextID or 0
     if db.ui.minimapAngle == nil then db.ui.minimapAngle = 220 end
     return db
