@@ -88,24 +88,6 @@ function L.Create(owner)
             scroll:SetVerticalScroll(top + height - scroll:GetHeight())
         end
     end)
-    local add = CreateFrame("Button", nil, self.content, "UIPanelButtonTemplate")
-    self.add = add
-    add:SetSize(130, 24)
-    add:SetText("New paragraph")
-    add:SetScript("OnClick", function()
-        self:Finish(false)
-        local note = owner:Note()
-        if not note or note.deleted then return end
-        local body = note.body
-        if body ~= "" and body:sub(-2) ~= "\n\n" then
-            body = body .. (body:sub(-1) == "\n" and "\n" or "\n\n")
-        end
-        if #body > 100000 then owner:Status("This note has reached the 100,000-byte editing limit."); return end
-        NS.Data.Update(NS.App.db, note, "body", body, time(), NS.App:Author())
-        owner:QueueList()
-        self:Show(note)
-        self:ActivateOffset(#body + 1)
-    end)
     return self
 end
 
@@ -257,7 +239,5 @@ function L:Layout()
         row:SetHeight(height)
         y = y + height
     end
-    self.add:ClearAllPoints()
-    self.add:SetPoint("TOPLEFT", 4, -y - 12)
-    self.content:SetHeight(math.max(self.scroll:GetHeight(), y + 58))
+    self.content:SetHeight(math.max(self.scroll:GetHeight(), y + 24))
 end

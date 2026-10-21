@@ -30,7 +30,8 @@ Live Preview is the default for new notebooks and new pages. Click a paragraph,
 heading, or list item to reveal and edit its Markdown. Surrounding blocks stay
 rendered. Click away or press Escape to render the edited block again. Enter adds
 normal line breaks; paragraphs added inside an active block become separate blocks
-when it renders. **New paragraph** adds space at the end and starts editing there.
+when it renders. Press Enter twice to leave a blank line and begin another
+paragraph, including at the end of the page. No separate paragraph button is needed.
 
 Tab moves to the next block; Shift-Tab moves to the previous block. Ctrl-S finishes
 editing the current block (WoW still writes to disk only on reload/logout).
