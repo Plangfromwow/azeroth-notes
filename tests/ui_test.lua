@@ -179,6 +179,9 @@ local tagRow
 for _, row in ipairs(U.rows) do if row.noteID == firstID then tagRow = row end end
 assert(tagRow.tags:GetText() == "druid · quest")
 assert(not tagRow.tags:GetText():find("#", 1, true))
+U.search:Type("quest")
+assert(U.rows[1].noteID == firstID and not U.rows[2]:IsShown())
+U.search:Type("")
 U.tags:Type("forest, travel"); U.tags:ClearFocus(); Tick()
 assert(U.tags:GetText() == "forest travel")
 assert(A.db.notes[firstID].body:find("forest", 1, true))

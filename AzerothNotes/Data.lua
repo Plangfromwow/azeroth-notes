@@ -112,9 +112,16 @@ end
 function D.List(db, query, trash)
     local results = {}
     query = Trim(query):lower()
+    local knownTags = {}
+    for _, note in pairs(db.notes) do
+        if (not not note.deleted) == (not not trash) then
+            for _, tag in ipairs(note.tags) do knownTags[tag] = true end
+        end
+    end
     local words, tags = {}, {}
     for word in query:gmatch("%S+") do
         if word:sub(1, 1) == "#" then tags[#tags + 1] = word:sub(2)
+        elseif knownTags[word] then tags[#tags + 1] = word
         else words[#words + 1] = word end
     end
     for _, note in pairs(db.notes) do

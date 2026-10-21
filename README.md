@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.3.2
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.3.3
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -77,7 +77,9 @@ Tags update the note list and search as you type; `druid quest` creates two tags
 displayed as `druid · quest` below the title.
 Commas and optional hash signs are also accepted and normalized when committed.
 Tags display without hash signs; use hyphens to keep a multiword tag together.
-Search titles, bodies, and tags by typing ordinary words. Multiple terms must all match. Notes are
+Search by typing ordinary words. An exact tag name filters to notes with that tag;
+other words search titles, bodies, and tags. This means `quest` shows notes tagged
+`quest`, rather than every page that mentions a quest. Multiple terms must all match. Notes are
 shared account-wide across characters in this Forever installation.
 
 The page's **Trash** action moves a note to recoverable trash. The top toolbar's
