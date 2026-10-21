@@ -1,0 +1,33 @@
+local NS = {}
+assert(loadfile("AzerothNotes/Data.lua"))("AzerothNotes", NS)
+local D = NS.Data
+local db = assert(D.Initialize())
+local a = D.Create(db, "Azeroth", "A forest and a river", 100, "Tester")
+local b = D.Create(db, "Azeroth", "A mountain", 100, "Tester")
+assert(a.id ~= b.id and b.title == "Azeroth (2)")
+assert(D.Find(db, " aZeRoTh ") == a)
+assert(not D.Update(db, b, "title", "Azeroth", 101))
+assert(not D.Update(db, a, "title", " ", 101))
+assert(not D.Update(db, a, "id", "bad", 101))
+local revision = a.revision
+assert(D.Update(db, a, "body", a.body, 101))
+assert(a.revision == revision)
+assert(D.Update(db, a, "tags", D.Tags(" Travel, #forest, travel, ,Quest "), 102))
+assert(table.concat(a.tags, ",") == "forest,quest,travel")
+assert(#D.List(db, "forest river #travel") == 1)
+assert(#D.List(db, "forest mountain") == 0)
+assert(#D.List(db, "#missing") == 0)
+assert(#D.List(db, "[literal pattern]") == 0)
+local id = a.id
+D.SetDeleted(db, a, true, 103)
+assert(a.deletedAt == 103 and #D.List(db, "") == 1)
+assert(#D.List(db, "", true) == 1 and not D.Find(db, "Azeroth"))
+local c = D.Create(db, "Azeroth", "replacement", 104)
+D.SetDeleted(db, a, false, 105)
+assert(a.id == id and a.title == "Azeroth (3)" and a.deletedAt == nil)
+assert(D.Initialize(db) == db and db.notes[id] == a)
+assert(#D.List(db, "") == 3)
+local future = { schemaVersion = 999 }
+assert(not D.Initialize(future) and future.notes == nil)
+assert(not D.Initialize("bad data"))
+print("Data: identity, revisions, search, tags, trash, restore, and schema checks passed.")
