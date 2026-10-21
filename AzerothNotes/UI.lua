@@ -422,6 +422,14 @@ function U:Build()
     self.emptyPage:SetWidth(300)
     self.tags = Input(frame, 300)
     self.tags:SetMaxLetters(500)
+    self.tags:SetScript("OnTextChanged", function(box, user)
+        if self.loading or not user then return end
+        local note = self:Note()
+        if note and not note.deleted then
+            D.Update(db, note, "tags", D.Tags(box:GetText()), time(), NS.App:Author())
+            self:QueueList()
+        end
+    end)
     self.tags:SetScript("OnEditFocusLost", function() U:Flush(); U:QueueList() end)
     local tagsLabel = Label(frame, "Tags:")
     tagsLabel:SetPoint("BOTTOMLEFT", self.page, "BOTTOMLEFT", 0, -24)

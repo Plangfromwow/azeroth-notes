@@ -172,7 +172,14 @@ _G.IsShiftKeyDown = function() return false end
 local firstID = U.selected
 U.title:ClearFocus()
 U.editor:Type("# My discovery\n\nA **quiet** forest. [[Second page]]")
-U.tags:SetFocus(); U.tags:Type("forest, travel"); U.tags:ClearFocus(); Tick()
+U.tags:SetFocus(); U.tags:Type("druid quest"); Tick()
+assert(table.concat(A.db.notes[firstID].tags, " ") == "druid quest")
+assert(#NS.Data.List(A.db, "druid quest") == 1)
+local tagRow
+for _, row in ipairs(U.rows) do if row.noteID == firstID then tagRow = row end end
+assert(tagRow.tags:GetText() == "druid · quest")
+assert(not tagRow.tags:GetText():find("#", 1, true))
+U.tags:Type("forest, travel"); U.tags:ClearFocus(); Tick()
 assert(U.tags:GetText() == "forest travel")
 assert(A.db.notes[firstID].body:find("forest", 1, true))
 assert(A.db.notes[firstID].tags[1] == "forest")
