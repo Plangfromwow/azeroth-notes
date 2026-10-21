@@ -27,6 +27,26 @@ function methods:SetScale(scale) self.scale = scale end
 function methods:GetScale() return self.scale or 1 end
 function methods:SetParent(parent) self.parent = parent end
 function methods:SetCursorPosition(position) self.cursor = position end
+function methods:GetCursorPosition() return self.cursor or #self.text end
+function methods:SetMaxLetters(limit) self.maxLetters = limit end
+function methods:GetMaxLetters() return self.maxLetters or 0 end
+function methods:HighlightText(first, last)
+    self.selection = { first or 0, last or #self.text }
+end
+function methods:Insert(text)
+    local first = self.selection and self.selection[1] or self:GetCursorPosition()
+    local last = self.selection and self.selection[2] or first
+    self.selection = nil
+    self:SetText(self.text:sub(1, first) .. text .. self.text:sub(last + 1))
+    self.cursor = first + #text
+end
+function methods:Enter()
+    self.scripts.OnKeyDown(self, "ENTER")
+    local cursor = self:GetCursorPosition()
+    self.text = self.text:sub(1, cursor) .. "\n" .. self.text:sub(cursor + 1)
+    self.cursor = cursor + 1
+    self.scripts.OnTextChanged(self, true)
+end
 function methods:SetPoint(...) self.points[#self.points + 1] = {...} end
 function methods:GetPoint() return unpack(self.points[1] or { "CENTER", UIParent, "CENTER", 0, 0 }) end
 function methods:ClearAllPoints() self.points = {} end
@@ -69,6 +89,7 @@ function methods:GetCenter() return 500, 500 end
 function methods:Click() assert(self.enabled); self.scripts.OnClick(self, "LeftButton") end
 function methods:Type(text)
     self.text = text
+    self.cursor, self.selection = #text, nil
     if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self, true) end
 end
 _G.CreateFrame = New
@@ -86,6 +107,7 @@ _G.UnitName = function() return "Adventurer" end
 _G.GetRealmName = function() return "Forever" end
 _G.IsControlKeyDown = function() return false end
 _G.IsShiftKeyDown = function() return false end
+_G.IsAltKeyDown = function() return false end
 _G.C_Timer = { After = function(_, callback) timers[#timers + 1] = callback end }
 local popup
 _G.StaticPopup_Show = function(which, text, _, data) popup = { which = which, data = data } end
@@ -95,7 +117,7 @@ local function Tick()
 end
 local function Load()
     local NS = {}
-    for _, file in ipairs({ "Data", "Markdown", "Layout", "LivePreview", "UI", "Core" }) do
+    for _, file in ipairs({ "Data", "Markdown", "Layout", "Editor", "LivePreview", "UI", "Core" }) do
         assert(loadfile("AzerothNotes/" .. file .. ".lua"))("AzerothNotes", NS)
     end
     local loader = frames[#frames]
@@ -117,6 +139,16 @@ loader.scripts.OnEvent(loader, "UI_SCALE_CHANGED"); Tick()
 local welcomeID = U.selected
 U:New("A place"); Tick()
 U:SetView("source")
+U.editor:Type("- A discovery")
+U.editor:Enter()
+assert(U.editor:GetText() == "- A discovery\n- ")
+U.editor:Enter()
+assert(U.editor:GetText() == "- A discovery\n\n")
+_G.IsShiftKeyDown = function() return true end
+U.editor:Type("- Shift line")
+U.editor:Enter()
+assert(U.editor:GetText() == "- Shift line\n")
+_G.IsShiftKeyDown = function() return false end
 local firstID = U.selected
 U.title:ClearFocus()
 U.editor:Type("# My discovery\n\nA **quiet** forest. [[Second page]]")
@@ -143,6 +175,11 @@ assert(A.db.notes[firstID].body:find("# A much longer discovery heading\n\nA **q
 U.live.editor:ClearFocus(); Tick()
 assert(not U.live.active)
 U.live:ActivateOffset(#A.db.notes[firstID].body)
+U.live.editor:Type("- Live item")
+U.live.editor:Enter()
+assert(U.live.editor:GetText() == "- Live item\n- ")
+U.live.editor:Enter()
+assert(U.live.editor:GetText() == "- Live item\n\n")
 U.live.editor:Type(U.live.editor:GetText() .. "\n\nFinal paragraph")
 local editedBody = A.db.notes[firstID].body
 assert(editedBody:sub(-15) == "Final paragraph")

@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.2.0
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.2.1
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -32,6 +32,12 @@ rendered. Click away or press Escape to render the edited block again. Enter add
 normal line breaks; paragraphs added inside an active block become separate blocks
 when it renders. Press Enter twice to leave a blank line and begin another
 paragraph, including at the end of the page. No separate paragraph button is needed.
+
+In both Live and Source modes, Enter continues `-`, `*`, and `+` lists, increments
+`1.` / `1)` numbering, and creates an unchecked next item for Markdown checklists.
+List indentation is preserved. Enter on an empty item ends the list. Shift-Enter
+inserts a plain line break without adding a marker. Pasting multiple lines leaves
+them as pasted. The existing one-level list rendering limitation still applies.
 
 Tab moves to the next block; Shift-Tab moves to the previous block. Ctrl-S finishes
 editing the current block (WoW still writes to disk only on reload/logout).

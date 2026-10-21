@@ -402,6 +402,7 @@ function U:Build()
     self.measure:SetSpacing(4)
     self.measure:Hide()
     self.editor:SetScript("OnTextChanged", function(box, user)
+        NS.Editor.Changed(box, user)
         if U.loading or not user then return end
         local note = U:Note()
         if note and not note.deleted then
@@ -418,6 +419,7 @@ function U:Build()
     end)
     self.editor:SetScript("OnEscapePressed", function(box) box:ClearFocus(); frame:Hide() end)
     self.editor:SetScript("OnKeyDown", function(box, key)
+        NS.Editor.KeyDown(box, key)
         if key == "S" and IsControlKeyDown() then U:Flush(); box:ClearFocus() end
     end)
 
