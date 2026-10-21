@@ -1,4 +1,5 @@
 local frames, timers = {}, {}
+local focusedBox
 local methods = {}
 local function New(kind, name, parent, template)
     local f = setmetatable({ kind = kind, name = name, parent = parent, scripts = {}, shown = true,
@@ -24,6 +25,8 @@ function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
 function methods:SetScale(scale) self.scale = scale end
 function methods:GetScale() return self.scale or 1 end
+function methods:SetParent(parent) self.parent = parent end
+function methods:SetCursorPosition(position) self.cursor = position end
 function methods:SetPoint(...) self.points[#self.points + 1] = {...} end
 function methods:GetPoint() return unpack(self.points[1] or { "CENTER", UIParent, "CENTER", 0, 0 }) end
 function methods:ClearAllPoints() self.points = {} end
@@ -40,10 +43,14 @@ function methods:SetText(text)
     if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self, false) end
 end
 function methods:GetText() return self.text end
-function methods:SetFocus() self.focus = true end
+function methods:SetFocus()
+    if focusedBox and focusedBox ~= self then focusedBox:ClearFocus() end
+    focusedBox, self.focus = self, true
+end
 function methods:ClearFocus()
     local focused = self.focus
     self.focus = false
+    if focusedBox == self then focusedBox = nil end
     if focused and self.scripts.OnEditFocusLost then self.scripts.OnEditFocusLost(self) end
 end
 function methods:SetEnabled(enabled) self.enabled = enabled end
@@ -78,6 +85,7 @@ _G.time = function() return 100 end
 _G.UnitName = function() return "Adventurer" end
 _G.GetRealmName = function() return "Forever" end
 _G.IsControlKeyDown = function() return false end
+_G.IsShiftKeyDown = function() return false end
 _G.C_Timer = { After = function(_, callback) timers[#timers + 1] = callback end }
 local popup
 _G.StaticPopup_Show = function(which, text, _, data) popup = { which = which, data = data } end
@@ -87,7 +95,7 @@ local function Tick()
 end
 local function Load()
     local NS = {}
-    for _, file in ipairs({ "Data", "Markdown", "Layout", "UI", "Core" }) do
+    for _, file in ipairs({ "Data", "Markdown", "Layout", "LivePreview", "UI", "Core" }) do
         assert(loadfile("AzerothNotes/" .. file .. ".lua"))("AzerothNotes", NS)
     end
     local loader = frames[#frames]
@@ -98,8 +106,8 @@ local NS, loader = Load()
 local U, A = NS.UI, NS.App
 assert(A.db and U.minimap and U.minimap:IsShown())
 A:Toggle(); Tick()
-assert(U.frame:IsShown() and U.readScroll:IsShown() and not U.editScroll:IsShown())
-assert(U.reader:GetText():find("<h1>", 1, true))
+assert(U.frame:IsShown() and U.live.scroll:IsShown() and not U.editScroll:IsShown())
+assert(U.live.rows[1].html:GetText():find("<h1>", 1, true))
 UIParent:SetSize(800, 600)
 loader.scripts.OnEvent(loader, "DISPLAY_SIZE_CHANGED"); Tick()
 assert(U.frame:GetWidth() * U.frame:GetScale() <= 800 * 0.92 + 0.01)
@@ -108,12 +116,38 @@ UIParent:SetSize(1920, 1080)
 loader.scripts.OnEvent(loader, "UI_SCALE_CHANGED"); Tick()
 local welcomeID = U.selected
 U:New("A place"); Tick()
+U:SetView("source")
 local firstID = U.selected
 U.title:ClearFocus()
 U.editor:Type("# My discovery\n\nA **quiet** forest. [[Second page]]")
 U.tags:SetFocus(); U.tags:Type("forest, travel"); U.tags:ClearFocus(); Tick()
 assert(A.db.notes[firstID].body:find("forest", 1, true))
 assert(A.db.notes[firstID].tags[1] == "forest")
+U:SetView("live")
+assert(U.live.scroll:IsShown() and not U.editScroll:IsShown())
+U.live.rows[3]:Click()
+assert(U.live.active == 3 and U.live.editor:GetText():find("**quiet**", 1, true))
+assert(not U.live.rows[3].html:IsShown() and U.live.rows[1].html:IsShown())
+U.live.editor:Type("A **quiet** forest. [[Second page]]\n\nA fresh thought.")
+assert(A.db.notes[firstID].body:find("A fresh thought.", 1, true))
+U.live.rows[1]:Click()
+U.live.editor:Type("# A much longer discovery heading")
+local paragraphRow
+for _, row in ipairs(U.live.rows) do
+    if row:IsShown() and row.html:GetText():find("quiet", 1, true) then paragraphRow = row; break end
+end
+assert(paragraphRow)
+paragraphRow:Click()
+assert(U.live.editor:GetText():find("quiet", 1, true))
+assert(A.db.notes[firstID].body:find("# A much longer discovery heading\n\nA **quiet**", 1, true))
+U.live.editor:ClearFocus(); Tick()
+assert(not U.live.active)
+U.live.add:Click()
+U.live.editor:Type("Final paragraph")
+local editedBody = A.db.notes[firstID].body
+assert(editedBody:sub(-15) == "Final paragraph")
+U:SetView("source")
+assert(U.editor:GetText() == editedBody and not U.live.active)
 U.mode:Click()
 assert(U.readScroll:IsShown() and not U.editScroll:IsShown())
 assert(U.reader:GetText():find('href="note:', 1, true))
@@ -122,11 +156,19 @@ assert(popup.data == "Second page")
 StaticPopupDialogs[popup.which].OnAccept(nil, popup.data); Tick()
 local secondID = U.selected
 assert(secondID ~= firstID and A.db.notes[secondID].title == "Second page")
+U.live:ActivateOffset(1)
+U.live.editor:Type("A second page's private words")
+U.live.editor:ClearFocus()
+U:Select(firstID, true); Tick()
+assert(A.db.notes[firstID].body == editedBody)
+assert(A.db.notes[secondID].body == "A second page's private words")
+U:Select(secondID, false)
 U.title:ClearFocus()
 U.title:SetFocus(); U.title:Type("A place"); U.title:ClearFocus()
 assert(A.db.notes[secondID].title == "Second page" and U.title:GetText() == "Second page")
 U.back:Click()
-assert(U.selected == firstID)
+assert(U.selected == secondID)
+U:Select(firstID, false)
 U.search:Type("#forest")
 assert(U.rows[1].noteID == firstID and not U.rows[2]:IsShown())
 U.remove:Click()

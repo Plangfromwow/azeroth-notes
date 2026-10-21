@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.1.1
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.2.0
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -20,9 +20,29 @@ the opaque area of Blizzard's quest parchment so the background fills the pane.
 
 ## Write and read
 
-Choose **New**, enter a title, and write Markdown. Commit a title or tags by pressing
-Enter or leaving the field. **Read** shows the formatted page; **Edit** returns to
-the source. **Notes** collapses or restores the left-hand list.
+Choose **New**, enter a title, and click the page to start writing. Commit a title
+or tags by pressing Enter or leaving the field. **Notes** collapses or restores
+the left-hand list.
+
+### Live Preview
+
+Live Preview is the default for new notebooks and new pages. Click a paragraph,
+heading, or list item to reveal and edit its Markdown. Surrounding blocks stay
+rendered. Click away or press Escape to render the edited block again. Enter adds
+normal line breaks; paragraphs added inside an active block become separate blocks
+when it renders. **New paragraph** adds space at the end and starts editing there.
+
+Tab moves to the next block; Shift-Tab moves to the previous block. Ctrl-S finishes
+editing the current block (WoW still writes to disk only on reload/logout).
+Ctrl-click `[[note links]]` to follow them in Live Preview; a normal click edits
+their paragraph. The first click places the cursor at the end of a block; click
+within the exposed source to position it more precisely. Native undo is limited
+to the current block's editing session; this is not a complete Obsidian editor.
+
+**Source** opens the whole-note Markdown editor, and its **Read** button opens the
+read-only page. **Live** returns to Live Preview. All three modes share the same
+note content. The current mode is remembered between sessions. The existing
+Markdown subset and colored emphasis limitation below apply in every preview.
 
 Supported in this build:
 
@@ -64,7 +84,7 @@ Copy the **AzerothNotes** directory into the Forever beta client's
 Azeroth Notes in the AddOns list and use `/anotes`. If a newly installed addon is
 not detected after `/reload`, restart the game client.
 
-1. Open the welcome note and switch between Read and Edit.
+1. Open a note, click and edit a block in Live, then switch Source → Read → Live.
 2. Create two pages, use a `[[link]]` between them, then try Back.
 3. Create a missing linked page. Try renaming to an existing title.
 4. Add tags, search a body word, and filter with `#tag`.
@@ -73,6 +93,9 @@ not detected after `/reload`, restart the game client.
 7. Toggle the minimap book, drag it, and right-click it to hide it.
 8. `/reload` and confirm the notes, tags, window, and icon preferences persist.
 9. Try another character and confirm the shared notebook appears.
+10. In Live, change a heading's length, then edit a later paragraph. Insert blank
+    lines, use Tab/Shift-Tab, and switch notes while editing. Verify surrounding
+    source text remains intact in Source mode.
 
 For a useful error report, enable `/console scriptErrors 1`, reproduce the problem,
 and record the first Lua error and what you clicked. Real-client appearance and

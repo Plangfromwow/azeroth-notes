@@ -23,7 +23,9 @@ Welcome to **Azeroth Notes**. A quiet place for discoveries, clues, and stories.
 
 ## Begin a page
 
-Choose New, give your note a title, and write in Markdown. Use Read to see the page.
+Choose New, give your note a title, and click a paragraph to write in Markdown.
+Live Preview renders it when you click away. Source shows the full Markdown;
+Read is available from Source. Ctrl-click a link in Live Preview to follow it.
 The Notes button folds away the list when you want more room.
 
 - Keep quest clues and the names of people you meet.

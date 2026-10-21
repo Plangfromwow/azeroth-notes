@@ -37,6 +37,7 @@ function U:Status(text)
 end
 
 function U:Flush()
+    if self.live then self.live:Finish(true) end
     local note = self:Note()
     if not note or not self.frame or self.loading or note.deleted then return end
     local oldTitle = note.title
@@ -151,6 +152,7 @@ function U:ShowNote()
     self:ResizeEditor()
     self.editScroll:SetVerticalScroll(0)
     self.readScroll:SetVerticalScroll(0)
+    self.live.scroll:SetVerticalScroll(0)
     self:RefreshMode()
     self:RefreshList()
     self:Status(note and (note.deleted and "In Trash. Restore this page to edit it." or "Changes reach disk on /reload or logout.") or "Choose a page, or begin a new note.")
@@ -177,20 +179,39 @@ function U:RefreshMode()
     local note = self:Note()
     local exists = note ~= nil
     local editable = exists and not note.deleted
-    local read = self.reading or not editable
+    local view = not editable and "read" or (self.view or "live")
+    local read = view == "read"
     self.title:SetEnabled(editable)
     self.tags:SetEnabled(editable)
-    self.editScroll:SetShown(exists and not read)
+    self.editScroll:SetShown(exists and view == "source")
     self.readScroll:SetShown(exists and read)
+    self.live.scroll:SetShown(exists and view == "live")
     self.emptyPage:SetShown(not exists)
-    self.mode:SetText(read and "Edit" or "Read")
+    self.mode:SetText(view == "source" and "Read" or "Source")
     self.mode:SetEnabled(editable)
+    self.liveMode:SetEnabled(editable)
+    self.liveMode:SetText(view == "live" and "|cffffd100Live|r" or "Live")
     self.remove:SetEnabled(exists)
     self.remove:SetText(note and note.deleted and "Restore" or "Trash")
     self.back:SetEnabled(self.history and #self.history > 0)
-    self.parchment:SetShown(read)
-    self.editorBackground:SetShown(not read)
+    self.parchment:SetShown(view ~= "source")
+    self.editorBackground:SetShown(view == "source")
     if read then self:Render() end
+    if view == "live" then self.live:Show(note) end
+    if view == "source" then
+        self.loading = true
+        self.editor:SetText(note and note.body or "")
+        self.loading = nil
+        self:ResizeEditor()
+    end
+end
+
+function U:SetView(view)
+    self:Flush()
+    self.view = view
+    NS.App.db.ui.view = view
+    self.editor:ClearFocus()
+    self:RefreshMode()
 end
 
 function U:New(title)
@@ -199,8 +220,8 @@ function U:New(title)
     self.trashButton:SetText("Trash")
     self.search:SetText("")
     local note = D.Create(NS.App.db, title or "Untitled note", "", time(), NS.App:Author())
-    self.reading = false
-    NS.App.db.ui.reading = false
+    self.view = "live"
+    NS.App.db.ui.view = "live"
     self:Select(note.id, true)
     self.title:SetFocus()
     self.title:HighlightText()
@@ -253,7 +274,8 @@ function U:Layout()
         C_Timer.After(0, function()
             self.layoutPending = nil
             self:ResizeEditor()
-            if self.reading or (self:Note() and self:Note().deleted) then self:Render() end
+            if self.view == "read" or (self:Note() and self:Note().deleted) then self:Render() end
+            if self.live and self.view == "live" then self.live:Layout() end
             self:RefreshList()
         end)
     end
@@ -314,11 +336,12 @@ function U:Build()
         else U:Select(nil, false) end
     end)
     self.remove:SetPoint("TOPRIGHT", -34, -38)
-    self.mode = Button(frame, "Edit", 65, function()
-        U:Flush(); U.reading = not U.reading; db.ui.reading = U.reading
-        U.editor:ClearFocus(); U:RefreshMode()
+    self.mode = Button(frame, "Source", 65, function()
+        U:SetView(U.view == "source" and "read" or "source")
     end)
     self.mode:SetPoint("RIGHT", self.remove, "LEFT", -4, 0)
+    self.liveMode = Button(frame, "Live", 55, function() U:SetView("live") end)
+    self.liveMode:SetPoint("RIGHT", self.mode, "LEFT", -4, 0)
 
     self.sidebar = CreateFrame("Frame", nil, frame, "InsetFrameTemplate")
     self.sidebar:SetPoint("TOPLEFT", 16, -71)
@@ -427,6 +450,7 @@ function U:Build()
     end)
     self.reader:SetScript("OnHyperlinkLeave", function() GameTooltip:Hide() end)
     self.readScroll:SetScrollChild(self.reader)
+    self.live = NS.LivePreview.Create(self)
     self.emptyPage = Label(self.page, "Your next adventure begins on a blank page.", "GameFontNormalLarge")
     self.emptyPage:SetPoint("CENTER")
     self.emptyPage:SetWidth(300)
@@ -463,7 +487,8 @@ function U:Build()
     frame:SetScript("OnSizeChanged", function() U:Layout() end)
     self:Layout()
     self.selected = db.ui.selected
-    self.reading = db.ui.reading ~= false
+    self.view = db.ui.view or "live"
+    if self.view ~= "live" and self.view ~= "source" and self.view ~= "read" then self.view = "live" end
     self:ShowNote()
 end
 

@@ -1,6 +1,6 @@
 # Azeroth Notes: Project Design
 
-Status: Phase 1 prototype implemented as version 0.1.0. The companion remains planned.
+Status: Phase 1 prototype implemented as version 0.2.0. The companion remains planned.
 
 The first build uses a Blizzard portrait frame and native controls, a parchment
 reading page, and a dark Markdown source editor. See README.md for installation,
@@ -47,8 +47,9 @@ The window contains a collapsible note list, a search field, and one selected no
 New, rename, delete, Edit/Read, and close are the essential controls. Support moving
 and resizing the window and remember its position and size. Escape closes it.
 
-Editing and reading are separate modes in the first version. A split live preview
-can follow later if it is useful; it is not necessary for the initial UI.
+Live Preview renders inactive blocks while the active block exposes its Markdown.
+Full-note Source and read-only Read modes remain available. This preserves a quiet
+single-page interface without a separate preview window.
 
 ## Initial player workflows
 
