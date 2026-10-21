@@ -208,17 +208,19 @@ function U:SetView(view)
     self:RefreshMode()
 end
 
-function U:New(title)
+function U:New(title, tags)
     self:Flush()
     self.trash = false
     self.trashButton:SetText("Trash")
     self.search:SetText("")
     local note = D.Create(NS.App.db, title or "Untitled note", "", time(), NS.App:Author())
+    if tags then note.tags = tags end
     self.view = "live"
     NS.App.db.ui.view = "live"
     self:Select(note.id, true)
     self.title:SetFocus()
     self.title:HighlightText()
+    return note
 end
 
 function U:OpenLink(target)

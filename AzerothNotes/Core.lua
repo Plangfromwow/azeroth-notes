@@ -55,7 +55,12 @@ loader:RegisterEvent("ADDON_LOADED")
 loader:RegisterEvent("PLAYER_LOGOUT")
 loader:RegisterEvent("DISPLAY_SIZE_CHANGED")
 loader:RegisterEvent("UI_SCALE_CHANGED")
+loader:RegisterEvent("PLAYER_LOGIN")
 loader:SetScript("OnEvent", function(_, event, name)
+    if event == "PLAYER_LOGIN" or (event == "ADDON_LOADED" and A.db) then
+        if A.db and NS.UnitNotes.Install() then loader:UnregisterEvent("ADDON_LOADED") end
+        return
+    end
     if event == "DISPLAY_SIZE_CHANGED" or event == "UI_SCALE_CHANGED" then
         if A.db then
             C_Timer.After(0, function() NS.UI:FitToScreen(true) end)
@@ -78,7 +83,7 @@ loader:SetScript("OnEvent", function(_, event, name)
         db.welcomed = true
     end
     NS.UI:SetupMinimap()
-    loader:UnregisterEvent("ADDON_LOADED")
+    if NS.UnitNotes.Install() then loader:UnregisterEvent("ADDON_LOADED") end
 end)
 
 SLASH_AZEROTHNOTES1 = "/anotes"

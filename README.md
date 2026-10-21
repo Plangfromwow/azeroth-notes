@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.2.2
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.3.0
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -79,6 +79,23 @@ shared account-wide across characters in this Forever installation.
 The page's **Trash** action moves a note to recoverable trash. The top toolbar's
 **Trash** button browses those pages; select one and choose **Restore**. There is
 no permanent deletion or automatic trash cleanup in this version.
+
+## Notes about players and creatures
+
+Right-click a native player, target, focus, party, raid, pet, or boss unit frame
+and choose **Add note**. The journal opens a new page titled with that unit's name,
+tags it automatically, and focuses the Live editor so you can start writing.
+Forever player surnames are included in the title.
+
+Name tags use lowercase and hyphens in place of spaces: `Forest Spider` becomes
+`#forest-spider`, and `Eacam Brennan` becomes `#eacam-brennan`. Search that tag to
+find all your pages about the unit. Each click creates a new note; existing pages
+remain intact, with numbered titles when needed. Names are captured when the menu
+opens, so changing your target before clicking does not change the note's subject.
+
+The entry uses Forever's native menu extension API. Custom unit-frame addons need
+to use those same unit menus to inherit it. Unavailable or restricted names are
+skipped. This feature does not add tooltip notes or a permanent unit-frame icon.
 
 ## Storage
 

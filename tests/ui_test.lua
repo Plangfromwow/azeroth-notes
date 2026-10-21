@@ -117,7 +117,7 @@ local function Tick()
 end
 local function Load()
     local NS = {}
-    for _, file in ipairs({ "Data", "Markdown", "Layout", "Editor", "LivePreview", "UI", "Core" }) do
+    for _, file in ipairs({ "Data", "Markdown", "Layout", "Editor", "LivePreview", "UI", "UnitNotes", "Core" }) do
         assert(loadfile("AzerothNotes/" .. file .. ".lua"))("AzerothNotes", NS)
     end
     local loader = frames[#frames]
@@ -257,4 +257,14 @@ assert(reloaded.App.db == saved and #NS.Data.List(saved, "") == 3)
 assert(saved.notes[firstID].tags[1] == "forest" and saved.notes[secondID].title == "Second page")
 assert(reloaded.UI.minimap:IsShown())
 assert(saved.notes[welcomeID])
+reloaded.UnitNotes.CreateNote("Eacam Brennan"); Tick()
+local unitNote = reloaded.UI:Note()
+assert(reloaded.UI.frame:IsShown() and unitNote.title == "Eacam Brennan")
+assert(unitNote.tags[1] == "eacam-brennan" and reloaded.UI.tags:GetText() == "eacam-brennan")
+assert(reloaded.UI.live.active and reloaded.UI.live.editor.focus)
+reloaded.UI.live.editor:Type("Helpful player near the river.")
+reloaded.UnitNotes.CreateNote("Eacam Brennan"); Tick()
+assert(reloaded.UI:Note().title == "Eacam Brennan (2)")
+assert(unitNote.body == "Helpful player near the river.")
+assert(#reloaded.Data.List(saved, "#eacam-brennan") == 2)
 print("UI flow: loading, editor/reader, link creation, history, tags, search, trash, icon and reload passed.")
