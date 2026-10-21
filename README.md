@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.2.1
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.2.2
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -61,7 +61,13 @@ Supported in this build:
 - `[[Note Title]]` opens a note. A missing target offers to create it. **Back**
   returns to the previous selection.
 
-Lists are one level deep and checkboxes are edited in the source. Tables, fenced
+Task items render as native Blizzard checkboxes in Live and Read modes. Click to
+check or uncheck; Source mode reflects the change as `[x]` or `[ ]`. Clicking the
+task text in Live still edits its Markdown, while the checkbox toggles without
+opening the editor. Tasks in Trash cannot be changed. Long task labels wrap beside
+their checkbox.
+
+Lists are one level deep. Tables, fenced
 code blocks, nested formatting, URL rendering, images, and link aliases are not
 implemented. Unsupported text remains literal. A rename preserves the note's ID
 but does not automatically rewrite links that use its former title.

@@ -130,6 +130,7 @@ function L:Finish(rebuild)
 end
 
 function L:ActivateOffset(offset)
+    if self.readOnly then return end
     self:Finish(false)
     self.owner.title:ClearFocus()
     self.owner.tags:ClearFocus()
@@ -160,7 +161,22 @@ function L:ActivateOffset(offset)
     self.owner:Status("Live Preview · Tab: next block · Shift-Tab: previous · Escape: render · Ctrl-click: follow link")
 end
 
-function L:Show(note)
+function L:ToggleTask(position)
+    local offset = self:UpdatedOffset(position)
+    self:Finish(false)
+    local note = self.owner:Note()
+    if not note or note.deleted then return end
+    local body = NS.Markdown.ToggleTask(note.body, offset)
+    if not body then self:Show(note, self.readOnly); return end
+    local scroll = self.scroll:GetVerticalScroll()
+    NS.Data.Update(NS.App.db, note, "body", body, time(), NS.App:Author())
+    self.owner:QueueList()
+    self:Show(note, self.readOnly)
+    self.scroll:SetVerticalScroll(scroll)
+end
+
+function L:Show(note, readOnly)
+    self.readOnly = readOnly == true
     if self.active then self:Layout(); return end
     self.noteID = note and note.id
     self.blocks = L.Blocks(note and note.body or "")
@@ -177,27 +193,38 @@ function L:Show(note)
             row.html:SetHyperlinksEnabled(true)
             row.html:EnableMouse(true)
             local function Edit()
-                if IsControlKeyDown() then return end
+                if self.readOnly or IsControlKeyDown() then return end
                 self:ActivateOffset(self:UpdatedOffset(row.first))
             end
             row:SetScript("OnClick", Edit)
             row.html:SetScript("OnMouseDown", function(_, button) if button == "LeftButton" then Edit() end end)
             row.html:SetScript("OnHyperlinkClick", function(_, link)
-                if not IsControlKeyDown() then return end
+                if not self.readOnly and not IsControlKeyDown() then return end
                 local hex = link:match("^note:(%x+)$")
                 local title = hex and NS.Markdown.Unhex(hex)
                 if title then self.owner:OpenLink(title) end
             end)
             row.html:SetScript("OnHyperlinkEnter", function()
                 GameTooltip:SetOwner(row.html, "ANCHOR_CURSOR")
-                GameTooltip:SetText("Ctrl-click to follow this note link")
+                GameTooltip:SetText(self.readOnly and "Click to follow this note link" or "Ctrl-click to follow this note link")
                 GameTooltip:Show()
             end)
             row.html:SetScript("OnHyperlinkLeave", function() GameTooltip:Hide() end)
+            row.checkbox = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+            row.checkbox:SetSize(24, 24)
+            row.checkbox:SetPoint("TOPLEFT", 0, -1)
+            row.checkbox:SetScript("OnClick", function()
+                if row.taskOffset then self:ToggleTask(row.taskOffset) end
+            end)
         end
         row.first = block.first
+        local task = NS.Markdown.Task(block.text)
+        row.task = task
+        row.taskOffset = task and (block.first + task.position - 1)
+        row.checkbox:SetChecked(task and task.checked or false)
+        row.checkbox:SetEnabled(note ~= nil and not note.deleted)
         row.placeholder = note and note.body == "" and index == 1
-        row.html:SetText(NS.Markdown.Render(row.placeholder and "*Click here to begin writing…*" or block.text))
+        row.html:SetText(NS.Markdown.Render(row.placeholder and "*Click here to begin writing…*" or (task and task.text or block.text)))
         row:Show()
     end
     for i = #self.blocks + 1, #self.rows do self.rows[i]:Hide() end
@@ -225,7 +252,10 @@ function L:Layout()
             height = math.max(28, self.measure:GetStringHeight() + 12)
             self.editor:SetHeight(height)
         else
-            row.html:SetWidth(width - 8)
+            local inset = row.task and 28 or 4
+            row.html:ClearAllPoints()
+            row.html:SetPoint("TOPLEFT", inset, -4)
+            row.html:SetWidth(width - inset - 4)
             for _, tag in ipairs({ "p", "h1", "h2", "h3" }) do
                 local extra = ({ p = 0, h1 = 8, h2 = 5, h3 = 2 })[tag]
                 row.html:SetFont(tag, "Fonts\\FRIZQT__.TTF", fontSize + extra, "")
@@ -237,6 +267,7 @@ function L:Layout()
             row.html:SetHeight(height)
         end
         row.html:SetShown(i ~= self.active)
+        row.checkbox:SetShown(row.task ~= nil and i ~= self.active)
         row.highlight:SetShown(i == self.active)
         row:SetHeight(height)
         y = y + height

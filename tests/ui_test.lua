@@ -130,6 +130,26 @@ assert(A.db and U.minimap and U.minimap:IsShown())
 A:Toggle(); Tick()
 assert(U.frame:IsShown() and U.live.scroll:IsShown() and not U.editScroll:IsShown())
 assert(U.live.rows[1].html:GetText():find("<h1>", 1, true))
+local originalWelcome = U:Note().body
+local taskRow
+for _, row in ipairs(U.live.rows) do
+    if row.task and not row.task.checked then taskRow = row; break end
+end
+assert(taskRow and taskRow.checkbox:IsShown())
+U.live:ActivateOffset(1)
+U.live.editor:Type(U.live.editor:GetText() .. " expanded")
+taskRow.checkbox:Click()
+assert(not U.live.active and U:Note().body:find("expanded", 1, true))
+assert(U:Note().body:find("- [x] Find a place", 1, true))
+U:SetView("source")
+assert(U.editor:GetText() == U:Note().body)
+U:SetView("read")
+taskRow:Click()
+assert(not U.live.active)
+taskRow.checkbox:Click()
+assert(U:Note().body:find("- [ ] Find a place", 1, true) and U.live.readOnly)
+NS.Data.Update(A.db, U:Note(), "body", originalWelcome, time(), A:Author())
+U:SetView("live")
 UIParent:SetSize(800, 600)
 loader.scripts.OnEvent(loader, "DISPLAY_SIZE_CHANGED"); Tick()
 assert(U.frame:GetWidth() * U.frame:GetScale() <= 800 * 0.92 + 0.01)
@@ -187,8 +207,12 @@ U:SetView("source")
 assert(U.editor:GetText() == editedBody and not U.live.active)
 assert(U.live.blocks[#U.live.blocks].text == "Final paragraph")
 U.mode:Click()
-assert(U.readScroll:IsShown() and not U.editScroll:IsShown())
-assert(U.reader:GetText():find('href="note:', 1, true))
+assert(U.live.scroll:IsShown() and U.live.readOnly and not U.editScroll:IsShown())
+local hasLink = false
+for _, row in ipairs(U.live.rows) do
+    if row:IsShown() and row.html:GetText():find('href="note:', 1, true) then hasLink = true end
+end
+assert(hasLink)
 U:OpenLink("Second page")
 assert(popup.data == "Second page")
 StaticPopupDialogs[popup.which].OnAccept(nil, popup.data); Tick()
@@ -215,6 +239,9 @@ U.trashButton:Click()
 assert(U.trash and U.rows[1].noteID == firstID)
 U.rows[1]:Click()
 assert(U.remove:GetText() == "Restore" and not U.title.enabled)
+for _, row in ipairs(U.live.rows) do
+    if row:IsShown() and row.task then assert(not row.checkbox.enabled) end
+end
 U.remove:Click()
 assert(not A.db.notes[firstID].deleted and U.selected == firstID)
 SlashCmdList.AZEROTHNOTES("minimap")

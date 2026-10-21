@@ -2,6 +2,20 @@ local _, NS = ...
 NS.Markdown = {}
 local M = NS.Markdown
 
+function M.Task(line)
+    local prefix, state, text = line:match("^([ \t]*[-+*][ \t]+%[)([ xX])%][ \t]*(.*)$")
+    if prefix then return { checked = state:lower() == "x", text = text, position = #prefix + 1 } end
+end
+
+function M.ToggleTask(source, position)
+    if position < 1 or position > #source then return nil end
+    local first = source:sub(1, position - 1):match(".*\n()") or 1
+    local last = (source:find("\n", position, true) or (#source + 1)) - 1
+    local task = M.Task(source:sub(first, last))
+    if not task or first + task.position - 1 ~= position then return nil end
+    return source:sub(1, position - 1) .. (task.checked and " " or "x") .. source:sub(position + 1)
+end
+
 local function Escape(s)
     return (s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
         :gsub('"', "&quot;"):gsub("|", "||"))
@@ -57,7 +71,7 @@ function M.Render(source)
     end
     for line in (source .. "\n"):gmatch("(.-)\n") do
         local hashes, heading = line:match("^(#+)%s+(.+)$")
-        local task, taskText = line:match("^%s*[-*]%s+%[([ xX])%]%s*(.*)$")
+        local task, taskText = line:match("^%s*[-*+]%s+%[([ xX])%]%s*(.*)$")
         local bullet = line:match("^%s*[-*+]%s+(.+)$")
         local number, numbered = line:match("^%s*(%d+)[.)]%s+(.+)$")
         local quote = line:match("^>%s?(.*)$")

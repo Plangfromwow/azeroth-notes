@@ -151,7 +151,6 @@ function U:ShowNote()
     self.tags:ClearFocus()
     self:ResizeEditor()
     self.editScroll:SetVerticalScroll(0)
-    self.readScroll:SetVerticalScroll(0)
     self.live.scroll:SetVerticalScroll(0)
     self:RefreshMode()
     self:RefreshList()
@@ -159,11 +158,7 @@ function U:ShowNote()
 end
 
 function U:Render()
-    local note = self:Note()
-    local width = math.max(80, self.readScroll:GetWidth() - 16)
-    self.reader:SetWidth(width)
-    self.reader:SetText(NS.Markdown.Render(note and note.body or ""))
-    self.reader:SetHeight(math.max(self.readScroll:GetHeight(), self.reader:GetContentHeight() + 30))
+    self.live:Show(self:Note(), true)
 end
 
 function U:ResizeEditor()
@@ -184,8 +179,7 @@ function U:RefreshMode()
     self.title:SetEnabled(editable)
     self.tags:SetEnabled(editable)
     self.editScroll:SetShown(exists and view == "source")
-    self.readScroll:SetShown(exists and read)
-    self.live.scroll:SetShown(exists and view == "live")
+    self.live.scroll:SetShown(exists and view ~= "source")
     self.emptyPage:SetShown(not exists)
     self.mode:SetText(view == "source" and "Read" or "Source")
     self.mode:SetEnabled(editable)
@@ -264,10 +258,6 @@ function U:Layout()
         self.fontSize = fontSize
         self.editor:SetFont("Fonts\\ARIALN.TTF", fontSize, "")
         self.measure:SetFont("Fonts\\ARIALN.TTF", fontSize, "")
-        for _, tag in ipairs({ "p", "h1", "h2", "h3" }) do
-            local extra = ({ p = 0, h1 = 8, h2 = 5, h3 = 2 })[tag]
-            self.reader:SetFont(tag, "Fonts\\FRIZQT__.TTF", fontSize + extra, "")
-        end
     end
     if not self.layoutPending then
         self.layoutPending = true
@@ -423,35 +413,6 @@ function U:Build()
         if key == "S" and IsControlKeyDown() then U:Flush(); box:ClearFocus() end
     end)
 
-    self.readScroll = Scroll(self.page, "AzerothNotesReadScroll")
-    self.readScroll:SetPoint("TOPLEFT", 22, -20)
-    self.readScroll:SetPoint("BOTTOMRIGHT", -34, 20)
-    self.reader = CreateFrame("SimpleHTML", nil, self.readScroll)
-    self.reader:SetSize(400, 400)
-    for _, tag in ipairs({ "p", "h1", "h2", "h3" }) do
-        local size = ({ p = 16, h1 = 25, h2 = 21, h3 = 18 })[tag]
-        self.reader:SetFont(tag, "Fonts\\FRIZQT__.TTF", size, "")
-        self.reader:SetTextColor(tag, 0.22, 0.16, 0.10)
-        self.reader:SetSpacing(tag, 5)
-        self.reader:SetShadowOffset(tag, 0, 0)
-    end
-    self.reader:SetHyperlinksEnabled(true)
-    self.reader:SetScript("OnHyperlinkClick", function(_, link)
-        local hex = link:match("^note:(%x+)$")
-        local title = hex and NS.Markdown.Unhex(hex)
-        if title then U:OpenLink(title) end
-    end)
-    self.reader:SetScript("OnHyperlinkEnter", function(_, link)
-        local hex = link:match("^note:(%x+)$")
-        local title = hex and NS.Markdown.Unhex(hex)
-        if not title then return end
-        GameTooltip:SetOwner(U.reader, "ANCHOR_CURSOR")
-        GameTooltip:SetText(Plain(title))
-        GameTooltip:AddLine(D.Find(db, title) and "Open this page" or "Create this page", 1, 0.82, 0)
-        GameTooltip:Show()
-    end)
-    self.reader:SetScript("OnHyperlinkLeave", function() GameTooltip:Hide() end)
-    self.readScroll:SetScrollChild(self.reader)
     self.live = NS.LivePreview.Create(self)
     self.emptyPage = Label(self.page, "Your next adventure begins on a blank page.", "GameFontNormalLarge")
     self.emptyPage:SetPoint("CENTER")
