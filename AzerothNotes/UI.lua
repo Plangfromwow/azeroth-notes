@@ -53,6 +53,24 @@ function U:SaveGeometry()
     local ui = NS.App.db.ui
     ui.point, ui.relative, ui.x, ui.y = point, relative, x, y
     ui.width, ui.height = f:GetWidth(), f:GetHeight()
+    ui.widthFraction = ui.width * f:GetScale() / math.max(1, UIParent:GetWidth())
+    ui.heightFraction = ui.height * f:GetScale() / math.max(1, UIParent:GetHeight())
+end
+
+function U:FitToScreen(recenter)
+    if not self.frame then return end
+    local f = self.frame
+    local width, height, scale, maxWidth, maxHeight = NS.Layout.Fit(
+        UIParent:GetWidth(), UIParent:GetHeight(), NS.App.db.ui)
+    f:SetScale(scale)
+    if f.SetResizeBounds then f:SetResizeBounds(680, 430, maxWidth, maxHeight)
+    else f:SetMinResize(680, 430) end
+    f:SetSize(width, height)
+    if recenter then
+        f:ClearAllPoints()
+        f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    end
+    if self.page then self:Layout() end
 end
 
 function U:QueueList()
@@ -83,10 +101,12 @@ function U:RefreshList()
             row.title:SetPoint("TOPLEFT", 8, -7)
             row.title:SetPoint("TOPRIGHT", -8, -7)
             row.title:SetJustifyH("LEFT")
+            row.title:SetWordWrap(false)
             row.tags = Label(row, "", "GameFontDisableSmall")
             row.tags:SetPoint("TOPLEFT", 8, -25)
             row.tags:SetPoint("TOPRIGHT", -8, -25)
             row.tags:SetJustifyH("LEFT")
+            row.tags:SetWordWrap(false)
             row:SetScript("OnClick", function(button) U:Select(button.noteID, true) end)
             self.rows[index] = row
         end
@@ -205,16 +225,29 @@ StaticPopupDialogs.AZEROTHNOTES_CREATE_LINK = {
 
 function U:Layout()
     local collapsed = NS.App.db.ui.collapsed
+    local sidebarWidth, fontSize = NS.Layout.Content(self.frame:GetWidth())
+    local pageLeft = collapsed and 18 or (sidebarWidth + 30)
+    self.sidebar:SetWidth(sidebarWidth)
+    self.search:SetWidth(sidebarWidth - 35)
     self.sidebar:SetShown(not collapsed)
     self.page:ClearAllPoints()
-    self.page:SetPoint("TOPLEFT", self.frame, "TOPLEFT", collapsed and 18 or 250, -106)
+    self.page:SetPoint("TOPLEFT", self.frame, "TOPLEFT", pageLeft, -106)
     self.page:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -32, 53)
     self.title:ClearAllPoints()
-    self.title:SetPoint("TOPLEFT", self.frame, "TOPLEFT", collapsed and 24 or 256, -72)
+    self.title:SetPoint("TOPLEFT", self.frame, "TOPLEFT", pageLeft + 6, -72)
     self.title:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -40, -72)
     self.tags:ClearAllPoints()
     self.tags:SetPoint("BOTTOMLEFT", self.page, "BOTTOMLEFT", 44, -30)
     self.tags:SetPoint("BOTTOMRIGHT", self.page, "BOTTOMRIGHT", -4, -30)
+    if self.fontSize ~= fontSize then
+        self.fontSize = fontSize
+        self.editor:SetFont("Fonts\\ARIALN.TTF", fontSize, "")
+        self.measure:SetFont("Fonts\\ARIALN.TTF", fontSize, "")
+        for _, tag in ipairs({ "p", "h1", "h2", "h3" }) do
+            local extra = ({ p = 0, h1 = 8, h2 = 5, h3 = 2 })[tag]
+            self.reader:SetFont(tag, "Fonts\\FRIZQT__.TTF", fontSize + extra, "")
+        end
+    end
     if not self.layoutPending then
         self.layoutPending = true
         C_Timer.After(0, function()
@@ -235,7 +268,7 @@ function U:Build()
     if frame.SetTitle then frame:SetTitle("Azeroth Notes")
     elseif frame.TitleText then frame.TitleText:SetText("Azeroth Notes") end
     if frame.SetPortraitToAsset then frame:SetPortraitToAsset(ICON) end
-    frame:SetSize(math.max(680, db.ui.width or 900), math.max(430, db.ui.height or 600))
+    self:FitToScreen()
     frame:SetPoint(db.ui.point or "CENTER", UIParent, db.ui.relative or "CENTER", db.ui.x or 0, db.ui.y or 0)
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
@@ -246,7 +279,6 @@ function U:Build()
     frame:SetScript("OnDragStop", function(f) f:StopMovingOrSizing(); U:SaveGeometry() end)
     frame:SetScript("OnHide", function() U:Flush(); U:SaveGeometry() end)
     frame:SetResizable(true)
-    if frame.SetResizeBounds then frame:SetResizeBounds(680, 430, 1500, 1100) else frame:SetMinResize(680, 430) end
     tinsert(UISpecialFrames, "AzerothNotesFrame")
     if not frame.CloseButton then
         frame.CloseButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
@@ -310,13 +342,19 @@ function U:Build()
     self.emptyList:SetPoint("TOPLEFT", 12, -75)
 
     self.title = Input(frame, 400)
-    self.title:SetFontObject("GameFontHighlightLarge")
+    self.title:SetFontObject("GameFontHighlight")
     self.title:SetScript("OnEditFocusLost", function() U:Flush(); U:QueueList() end)
     self.page = CreateFrame("Frame", nil, frame, "InsetFrameTemplate")
+    self.paperBase = self.page:CreateTexture(nil, "BACKGROUND", nil, 1)
+    self.paperBase:SetPoint("TOPLEFT", 2, -2)
+    self.paperBase:SetPoint("BOTTOMRIGHT", -2, 2)
+    self.paperBase:SetColorTexture(0.84, 0.73, 0.51, 1)
     self.parchment = self.page:CreateTexture(nil, "ARTWORK")
     self.parchment:SetPoint("TOPLEFT", 2, -2)
     self.parchment:SetPoint("BOTTOMRIGHT", -2, 2)
     self.parchment:SetTexture("Interface\\QuestFrame\\QuestBG")
+    -- QuestBG includes transparent padding; sample its opaque paper so ink never falls on the dark inset.
+    self.parchment:SetTexCoord(0.05, 0.50, 0.05, 0.50)
     self.parchment:SetVertexColor(0.94, 0.89, 0.75)
     self.editorBackground = self.page:CreateTexture(nil, "ARTWORK")
     self.editorBackground:SetPoint("TOPLEFT", 2, -2)
@@ -361,8 +399,8 @@ function U:Build()
     end)
 
     self.readScroll = Scroll(self.page, "AzerothNotesReadScroll")
-    self.readScroll:SetPoint("TOPLEFT", 18, -18)
-    self.readScroll:SetPoint("BOTTOMRIGHT", -30, 18)
+    self.readScroll:SetPoint("TOPLEFT", 22, -20)
+    self.readScroll:SetPoint("BOTTOMRIGHT", -34, 20)
     self.reader = CreateFrame("SimpleHTML", nil, self.readScroll)
     self.reader:SetSize(400, 400)
     for _, tag in ipairs({ "p", "h1", "h2", "h3" }) do
@@ -402,6 +440,7 @@ function U:Build()
     self.status:SetPoint("BOTTOMLEFT", 24, 14)
     self.status:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -180, 14)
     self.status:SetJustifyH("LEFT")
+    self.status:SetWordWrap(false)
     local minimap = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
     minimap:SetSize(24, 24)
     minimap:SetPoint("BOTTOMRIGHT", -129, 9)

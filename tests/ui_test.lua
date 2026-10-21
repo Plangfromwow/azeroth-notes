@@ -13,7 +13,7 @@ for _, method in ipairs({ "SetTextColor", "SetFontObject", "SetTexture", "SetVer
     "SetClampedToScreen", "SetMovable", "EnableMouse", "RegisterForDrag", "SetResizable", "SetResizeBounds",
     "SetMinResize", "SetPortraitToAsset", "SetTitle", "SetNormalTexture", "SetHighlightTexture", "SetPushedTexture",
     "RegisterForClicks", "RegisterEvent", "UnregisterEvent", "StartMoving", "StopMovingOrSizing", "StartSizing",
-    "HighlightText", "SetOwner", "AddLine" }) do
+    "HighlightText", "SetOwner", "AddLine", "SetTexCoord", "SetWordWrap" }) do
     methods[method] = function() end
 end
 function methods:SetScript(key, handler) self.scripts[key] = handler end
@@ -22,6 +22,8 @@ function methods:SetWidth(w) self.width = w end
 function methods:SetHeight(h) self.height = h end
 function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
+function methods:SetScale(scale) self.scale = scale end
+function methods:GetScale() return self.scale or 1 end
 function methods:SetPoint(...) self.points[#self.points + 1] = {...} end
 function methods:GetPoint() return unpack(self.points[1] or { "CENTER", UIParent, "CENTER", 0, 0 }) end
 function methods:ClearAllPoints() self.points = {} end
@@ -64,6 +66,7 @@ function methods:Type(text)
 end
 _G.CreateFrame = New
 _G.UIParent = New("Frame", "UIParent")
+UIParent:SetSize(1920, 1080)
 _G.Minimap = New("Frame", "Minimap")
 _G.GameTooltip = New("Frame", "GameTooltip")
 _G.UISpecialFrames = {}
@@ -84,7 +87,7 @@ local function Tick()
 end
 local function Load()
     local NS = {}
-    for _, file in ipairs({ "Data", "Markdown", "UI", "Core" }) do
+    for _, file in ipairs({ "Data", "Markdown", "Layout", "UI", "Core" }) do
         assert(loadfile("AzerothNotes/" .. file .. ".lua"))("AzerothNotes", NS)
     end
     local loader = frames[#frames]
@@ -97,6 +100,12 @@ assert(A.db and U.minimap and U.minimap:IsShown())
 A:Toggle(); Tick()
 assert(U.frame:IsShown() and U.readScroll:IsShown() and not U.editScroll:IsShown())
 assert(U.reader:GetText():find("<h1>", 1, true))
+UIParent:SetSize(800, 600)
+loader.scripts.OnEvent(loader, "DISPLAY_SIZE_CHANGED"); Tick()
+assert(U.frame:GetWidth() * U.frame:GetScale() <= 800 * 0.92 + 0.01)
+assert(U.frame:GetHeight() * U.frame:GetScale() <= 600 * 0.90 + 0.01)
+UIParent:SetSize(1920, 1080)
+loader.scripts.OnEvent(loader, "UI_SCALE_CHANGED"); Tick()
 local welcomeID = U.selected
 U:New("A place"); Tick()
 local firstID = U.selected

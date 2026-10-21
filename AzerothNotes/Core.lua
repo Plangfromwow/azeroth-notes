@@ -51,7 +51,15 @@ This first build keeps notes in WoW. An external Markdown vault and desktop comp
 local loader = CreateFrame("Frame")
 loader:RegisterEvent("ADDON_LOADED")
 loader:RegisterEvent("PLAYER_LOGOUT")
+loader:RegisterEvent("DISPLAY_SIZE_CHANGED")
+loader:RegisterEvent("UI_SCALE_CHANGED")
 loader:SetScript("OnEvent", function(_, event, name)
+    if event == "DISPLAY_SIZE_CHANGED" or event == "UI_SCALE_CHANGED" then
+        if A.db then
+            C_Timer.After(0, function() NS.UI:FitToScreen(true) end)
+        end
+        return
+    end
     if event == "PLAYER_LOGOUT" then
         if A.db and NS.UI.Flush then NS.UI:Flush() end
         return

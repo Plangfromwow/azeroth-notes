@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.1.0
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.1.1
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -11,6 +11,12 @@ inputs and scrollbars, with a parchment reading page and a quiet source editor.
 - Bind **Azeroth Notes: Open / close journal** in the game's keybinding settings.
 - Escape closes the journal. Drag the frame to move it; drag its lower-right corner
   to resize. Position, size and reading mode persist.
+
+The window fits the current viewport and responds to resolution/UI-scale changes.
+Manual sizes are remembered as screen proportions. Narrower windows use a smaller
+sidebar and reading font; very small viewports also scale the frame to keep all
+controls on screen. Screen changes recenter the journal. The reading page samples
+the opaque area of Blizzard's quest parchment so the background fills the pane.
 
 ## Write and read
 

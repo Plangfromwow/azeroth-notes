@@ -2,12 +2,13 @@
 ## Title: Azeroth Notes
 ## Notes: A quiet Markdown journal for WoW Forever.
 ## Author: Plangfromwow
-## Version: 0.1.0
+## Version: 0.1.1
 ## SavedVariables: AzerothNotesDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_09
 
 Data.lua
 Markdown.lua
+Layout.lua
 UI.lua
 Core.lua
 Bindings.xml
