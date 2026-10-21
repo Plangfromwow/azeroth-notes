@@ -1,7 +1,7 @@
 local _, NS = ...
 NS.Data = {}
 local D = NS.Data
-local VERSION = 1
+local VERSION = 2
 
 local function Trim(value)
     return (tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", ""))
@@ -11,11 +11,22 @@ D.Trim = Trim
 function D.Initialize(saved)
     if saved and type(saved) ~= "table" then return nil, "Notebook data is not a table." end
     local db = saved or {}
-    if (tonumber(db.schemaVersion) or 0) > VERSION then
+    local oldVersion = tonumber(db.schemaVersion) or 0
+    if oldVersion > VERSION then
         return nil, "This notebook needs a newer version of Azeroth Notes. Your data was left untouched."
     end
     db.schemaVersion = VERSION
     db.notes = db.notes or {}
+    if oldVersion < 2 then
+        for _, note in pairs(db.notes) do
+            local previous = note.tags or {}
+            local tags = D.Tags(table.concat(previous, " "))
+            if table.concat(previous, "\031") ~= table.concat(tags, "\031") then
+                note.tags = tags
+                note.revision = (note.revision or 1) + 1
+            end
+        end
+    end
     db.ui = db.ui or {}
     if db.ui.minimap == nil then db.ui.minimap = true end
     db.nextID = db.nextID or 0
@@ -43,8 +54,8 @@ end
 
 function D.Tags(text)
     local tags, seen = {}, {}
-    for tag in tostring(text or ""):gmatch("[^,]+") do
-        tag = Trim(tag):gsub("^#", ""):lower()
+    for tag in tostring(text or ""):gmatch("[^,%s#]+") do
+        tag = tag:lower()
         if tag ~= "" and not seen[tag] then
             seen[tag] = true
             tags[#tags + 1] = tag
@@ -108,7 +119,7 @@ function D.List(db, query, trash)
     end
     for _, note in pairs(db.notes) do
         if (not not note.deleted) == (not not trash) then
-            local haystack = (note.title .. "\n" .. note.body):lower()
+            local haystack = (note.title .. "\n" .. note.body .. "\n" .. table.concat(note.tags, " ")):lower()
             local matches = true
             for _, word in ipairs(words) do
                 if not haystack:find(word, 1, true) then matches = false end

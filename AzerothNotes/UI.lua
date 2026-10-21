@@ -45,6 +45,7 @@ function U:Flush()
     if not ok then self:Status(err); self.title:SetText(note.title) end
     if ok and note.title ~= oldTitle then self:Status("Page renamed. Update any [[links]] that used its old title.") end
     D.Update(NS.App.db, note, "tags", D.Tags(self.tags:GetText()), time(), NS.App:Author())
+    self.tags:SetText(table.concat(note.tags, " "))
 end
 
 function U:SaveGeometry()
@@ -116,7 +117,7 @@ function U:RefreshList()
         row:SetPoint("TOPLEFT", 0, -(index - 1) * 45)
         row:SetWidth(width)
         row.title:SetText(Plain(note.title))
-        local tags = #note.tags > 0 and ("#" .. table.concat(note.tags, "  #")) or "Untagged"
+        local tags = #note.tags > 0 and table.concat(note.tags, " · ") or "Untagged"
         row.tags:SetText(Plain(tags))
         row.selected:SetShown(self.selected == note.id)
         row:Show()
@@ -143,7 +144,7 @@ function U:ShowNote()
     local note = self:Note()
     self.loading = true
     self.title:SetText(note and note.title or "")
-    self.tags:SetText(note and table.concat(note.tags, ", ") or "")
+    self.tags:SetText(note and table.concat(note.tags, " ") or "")
     self.editor:SetText(note and note.body or "")
     self.loading = nil
     self.editor:ClearFocus()
@@ -342,7 +343,7 @@ function U:Build()
     self.search = Input(self.sidebar, 185)
     self.search:SetPoint("TOPLEFT", 12, -10)
     self.search:SetMaxLetters(200)
-    local searchHint = Label(self.sidebar, "Search notes or #tag", "GameFontDisableSmall")
+    local searchHint = Label(self.sidebar, "Search notes or tags", "GameFontDisableSmall")
     searchHint:SetPoint("TOPLEFT", 12, -37)
     self.search:SetScript("OnTextChanged", function() U:RefreshList() end)
     self.listScroll = Scroll(self.sidebar, "AzerothNotesListScroll")

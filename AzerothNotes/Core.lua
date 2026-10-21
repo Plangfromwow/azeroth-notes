@@ -29,8 +29,8 @@ Read is available from Source. Ctrl-click a link in Live Preview to follow it.
 The Notes button folds away the list when you want more room.
 
 - Keep quest clues and the names of people you meet.
-- Assign tags in the Tags field, separated by commas.
-- Search with words or #tag to find a page again.
+- Assign tags in the Tags field, separated by spaces. No hash signs needed.
+- Search using words or tags to find a page again.
 - Connect pages with [[A place worth remembering]].
 
 ## A few familiar marks
@@ -94,7 +94,7 @@ SlashCmdList.AZEROTHNOTES = function(message)
         NS.UI:SetupMinimap()
         A:Message(A.db.ui.minimap and "Minimap book shown." or "Minimap book hidden.")
     elseif message == "help" then
-        A:Message("/anotes opens the journal. /anotes minimap toggles its book icon. Search #tag to filter notes.")
+        A:Message("/anotes opens the journal. /anotes minimap toggles its book icon. Search words or tags to find notes.")
     else
         A:Toggle()
     end

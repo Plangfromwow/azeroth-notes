@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.3.0
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.3.1
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -72,8 +72,10 @@ code blocks, nested formatting, URL rendering, images, and link aliases are not
 implemented. Unsupported text remains literal. A rename preserves the note's ID
 but does not automatically rewrite links that use its former title.
 
-Enter comma-separated tags below a page. Search titles and bodies using words;
-add `#tag` to filter by an assigned tag. Multiple terms must all match. Notes are
+Enter space-separated tags below a page: `quest forest-spider helpful-player`.
+Commas and optional hash signs are also accepted and normalized when committed.
+Tags display without hash signs; use hyphens to keep a multiword tag together.
+Search titles, bodies, and tags by typing ordinary words. Multiple terms must all match. Notes are
 shared account-wide across characters in this Forever installation.
 
 The page's **Trash** action moves a note to recoverable trash. The top toolbar's
@@ -88,7 +90,7 @@ tags it automatically, and focuses the Live editor so you can start writing.
 Forever player surnames are included in the title.
 
 Name tags use lowercase and hyphens in place of spaces: `Forest Spider` becomes
-`#forest-spider`, and `Eacam Brennan` becomes `#eacam-brennan`. Search that tag to
+`forest-spider`, and `Eacam Brennan` becomes `eacam-brennan`. Search that tag to
 find all your pages about the unit. Each click creates a new note; existing pages
 remain intact, with numbered titles when needed. Names are captured when the menu
 opens, so changing your target before clicking does not change the note's subject.
@@ -117,7 +119,7 @@ not detected after `/reload`, restart the game client.
 1. Open a note, click and edit a block in Live, then switch Source → Read → Live.
 2. Create two pages, use a `[[link]]` between them, then try Back.
 3. Create a missing linked page. Try renaming to an existing title.
-4. Add tags, search a body word, and filter with `#tag`.
+4. Add space-separated tags, search a body word, and find a note using a tag without a hash sign.
 5. Trash a page, browse Trash, and restore it.
 6. Collapse the list, resize the window, and try a long note.
 7. Toggle the minimap book, drag it, and right-click it to hide it.
