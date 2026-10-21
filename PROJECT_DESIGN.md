@@ -1,6 +1,10 @@
 # Azeroth Notes: Project Design
 
-Status: Phase 1 prototype implemented as version 0.2.0. The companion remains planned.
+Status: Phase 1 prototype implemented as version 0.4.0. The companion remains planned.
+
+Named, one-level folders now support drag-and-drop, right-click moves, rename,
+and removal without deleting notes. Search spans all folders. Notes retain stable
+IDs across moves; folder assignments and collapsed state are saved in WoW.
 
 The first build uses a Blizzard portrait frame and native controls, a parchment
 reading page, and a dark Markdown source editor. See README.md for installation,

@@ -1,7 +1,7 @@
 local _, NS = ...
 NS.Data = {}
 local D = NS.Data
-local VERSION = 2
+local VERSION = 3
 
 local function Trim(value)
     return (tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", ""))
@@ -28,6 +28,12 @@ function D.Initialize(saved)
         end
     end
     db.ui = db.ui or {}
+    db.folders = db.folders or {}
+    db.nextFolderID = db.nextFolderID or 0
+    db.ui.folderCollapsed = db.ui.folderCollapsed or {}
+    for _, note in pairs(db.notes) do
+        if note.folderID and not db.folders[note.folderID] then note.folderID = nil end
+    end
     if db.ui.minimap == nil then db.ui.minimap = true end
     db.nextID = db.nextID or 0
     if db.ui.minimapAngle == nil then db.ui.minimapAngle = 220 end
@@ -107,6 +113,74 @@ function D.SetDeleted(db, note, deleted, now)
     note.deletedAt = deleted and now or nil
     note.updatedAt = now
     note.revision = note.revision + 1
+end
+
+local function FolderName(db, name, exceptID)
+    name = Trim(name)
+    if name == "" then return nil, "Give the folder a name." end
+    if #name > 80 then return nil, "Keep folder names under 80 bytes." end
+    if name:lower() == "unfiled" then return nil, "Unfiled is reserved for notes without a folder." end
+    for id, folder in pairs(db.folders) do
+        if id ~= exceptID and folder.name:lower() == name:lower() then
+            return nil, "Another folder already uses that name."
+        end
+    end
+    return name
+end
+
+function D.CreateFolder(db, name, now)
+    local valid, err = FolderName(db, name)
+    if not valid then return nil, err end
+    local id
+    repeat
+        db.nextFolderID = db.nextFolderID + 1
+        id = "folder-" .. db.nextFolderID
+    until not db.folders[id]
+    local folder = {id = id, name = valid, createdAt = now, updatedAt = now, revision = 1}
+    db.folders[id] = folder
+    return folder
+end
+
+function D.RenameFolder(db, id, name, now)
+    local folder = db.folders[id]
+    if not folder then return nil, "This folder no longer exists." end
+    local valid, err = FolderName(db, name, id)
+    if not valid then return nil, err end
+    if folder.name ~= valid then
+        folder.name, folder.updatedAt = valid, now
+        folder.revision = folder.revision + 1
+    end
+    return folder
+end
+
+function D.FolderList(db)
+    local folders = {}
+    for _, folder in pairs(db.folders) do folders[#folders + 1] = folder end
+    table.sort(folders, function(a, b) return a.name:lower() < b.name:lower() end)
+    return folders
+end
+
+function D.MoveNote(db, note, folderID, now, author)
+    if not note or note.deleted then return false, "Restore this note before moving it." end
+    if folderID and not db.folders[folderID] then return false, "This folder no longer exists." end
+    if note.folderID ~= folderID then
+        note.folderID, note.updatedAt, note.lastAuthor = folderID, now, author
+        note.revision = note.revision + 1
+    end
+    return true
+end
+
+function D.RemoveFolder(db, id, now)
+    if not db.folders[id] then return false end
+    for _, note in pairs(db.notes) do
+        if note.folderID == id then
+            note.folderID, note.updatedAt = nil, now
+            note.revision = note.revision + 1
+        end
+    end
+    db.folders[id] = nil
+    db.ui.folderCollapsed[id] = nil
+    return true
 end
 
 function D.List(db, query, trash)

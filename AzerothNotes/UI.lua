@@ -86,11 +86,13 @@ end
 
 function U:RefreshList()
     if not self.frame then return end
+    if self.folderUI and self.folderUI.draggedID then return end
     local list = D.List(NS.App.db, self.search:GetText(), self.trash)
     self.rows = self.rows or {}
     local width = math.max(140, self.listScroll:GetWidth() - 4)
     self.listChild:SetWidth(width)
-    for index, note in ipairs(list) do
+    local visible, offsets, contentHeight = self.folderUI:Arrange(list, self.search:GetText(), self.trash, width)
+    for index, note in ipairs(visible) do
         local row = self.rows[index]
         if not row then
             row = CreateFrame("Button", nil, self.listChild)
@@ -109,23 +111,31 @@ function U:RefreshList()
             row.tags:SetPoint("TOPRIGHT", -8, -25)
             row.tags:SetJustifyH("LEFT")
             row.tags:SetWordWrap(false)
-            row:SetScript("OnClick", function(button) U:Select(button.noteID, true) end)
+            row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+            row:RegisterForDrag("LeftButton")
+            row:SetScript("OnClick", function(button, mouse)
+                if button.suppressClick then return end
+                if mouse == "RightButton" then U.folderUI:NoteMenu(button)
+                else U:Select(button.noteID, true) end
+            end)
+            row:SetScript("OnDragStart", function(button) U.folderUI:BeginDrag(button.noteID) end)
+            row:SetScript("OnDragStop", function(button) U.folderUI:EndDrag(button) end)
             self.rows[index] = row
         end
         row.noteID = note.id
         row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", 0, -(index - 1) * 45)
-        row:SetWidth(width)
+        row:SetPoint("TOPLEFT", offsets[index].x, -offsets[index].y)
+        row:SetWidth(width - offsets[index].x)
         row.title:SetText(Plain(note.title))
         local tags = #note.tags > 0 and table.concat(note.tags, " · ") or "Untagged"
         row.tags:SetText(Plain(tags))
         row.selected:SetShown(self.selected == note.id)
         row:Show()
     end
-    for index = #list + 1, #self.rows do self.rows[index]:Hide() end
-    self.listChild:SetHeight(math.max(1, #list * 45))
+    for index = #visible + 1, #self.rows do self.rows[index]:Hide() end
+    self.listChild:SetHeight(math.max(1, contentHeight))
     self.count:SetText((self.trash and "Trash" or "Notes") .. "  ·  " .. #list)
-    self.emptyList:SetShown(#list == 0)
+    self.emptyList:SetShown(#list == 0 and (self.trash or D.Trim(self.search:GetText()) ~= ""))
     self.emptyList:SetText(self.trash and "Trash is empty." or "No matching notes.")
 end
 
@@ -356,6 +366,7 @@ function U:Build()
     self.count:SetPoint("BOTTOMLEFT", 10, 8)
     self.emptyList = Label(self.sidebar, "No matching notes.", "GameFontDisableSmall")
     self.emptyList:SetPoint("TOPLEFT", 12, -75)
+    self.folderUI = NS.Folders.Create(self)
 
     self.title = Input(frame, 400)
     self.title:SetFontObject("GameFontHighlight")

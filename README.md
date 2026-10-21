@@ -1,6 +1,6 @@
 # Azeroth Notes
 
-A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.3.3
+A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.4.0
 is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
@@ -102,6 +102,26 @@ opens, so changing your target before clicking does not change the note's subjec
 The entry uses Forever's native menu extension API. Custom unit-frame addons need
 to use those same unit menus to inherit it. Unavailable or restricted names are
 skipped. This feature does not add tooltip notes or a permanent unit-frame icon.
+
+## Folders
+
+Choose **New folder** at the bottom of the note list and enter your own name.
+Folders are one level deep. **Unfiled** holds notes that have not been moved.
+
+- Click a folder heading to collapse or expand it.
+- Drag a note onto a folder heading and release to move it. Drop onto **Unfiled**
+  to remove its folder assignment. Drop elsewhere to cancel the move.
+- Right-click a note for **Move to folder**, with Unfiled, your named folders, and
+  a **New folder...** action that creates a folder and moves the note into it.
+- Right-click a named folder to rename it or remove it. Removing a folder asks
+  for confirmation and returns its notes to Unfiled, including notes in Trash.
+- Search checks all folders and reveals matching notes even in collapsed folders.
+  Clearing search restores the saved collapsed state. Folder names are not search
+  terms; search still uses note titles, content, and tags.
+
+New notes start in Unfiled. Moving a note preserves its title, body, tags, links,
+and identity. Folder names, assignments, and collapsed state persist through
+reload/logout. Trash remains a separate flat list; restore notes before moving them.
 
 ## Storage
 

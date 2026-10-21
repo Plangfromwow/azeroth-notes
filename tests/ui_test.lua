@@ -117,7 +117,7 @@ local function Tick()
 end
 local function Load()
     local NS = {}
-    for _, file in ipairs({ "Data", "Markdown", "Layout", "Editor", "LivePreview", "UI", "UnitNotes", "Core" }) do
+    for _, file in ipairs({ "Data", "Markdown", "Layout", "Editor", "LivePreview", "Folders", "UI", "UnitNotes", "Core" }) do
         assert(loadfile("AzerothNotes/" .. file .. ".lua"))("AzerothNotes", NS)
     end
     local loader = frames[#frames]
@@ -278,4 +278,58 @@ reloaded.UnitNotes.CreateNote("Eacam Brennan"); Tick()
 assert(reloaded.UI:Note().title == "Eacam Brennan (2)")
 assert(unitNote.body == "Helpful player near the river.")
 assert(#reloaded.Data.List(saved, "#eacam-brennan") == 2)
+local folderUI, journal = reloaded.UI.folderUI, reloaded.UI
+journal.live.editor:Type("Folder movement must keep this text.")
+local movedID = journal.selected
+folderUI:Prompt()
+folderUI.entry:Type("People")
+folderUI.saveButton:Click()
+local folder = reloaded.Data.FolderList(saved)[1]
+assert(folder.name == "People" and not folderUI.dialog:IsShown())
+local menuItems
+_G.MenuUtil = {CreateContextMenu = function(owner, build)
+    menuItems = {}
+    local root = {
+        CreateTitle = function() end, CreateDivider = function() end,
+        CreateRadio = function(_, label, selected, callback) menuItems[label] = callback end,
+        CreateButton = function(_, label, callback) menuItems[label] = callback end,
+    }
+    build(owner, root)
+end}
+local function VisibleRow(id)
+    for _, row in ipairs(journal.rows) do if row:IsShown() and row.noteID == id then return row end end
+end
+local row = assert(VisibleRow(movedID))
+row.scripts.OnClick(row, "RightButton")
+menuItems.People()
+assert(saved.notes[movedID].folderID == folder.id)
+row = assert(VisibleRow(movedID))
+row.scripts.OnClick(row, "RightButton")
+menuItems.Unfiled()
+assert(saved.notes[movedID].folderID == nil)
+row = assert(VisibleRow(movedID))
+row.scripts.OnDragStart(row)
+_G.MouseIsOver = function(frame) return frame == folderUI.headers[folder.id] end
+row.scripts.OnDragStop(row); Tick()
+assert(saved.notes[movedID].folderID == folder.id)
+folderUI.headers[folder.id]:Click()
+assert(not VisibleRow(movedID))
+journal.search:Type("eacam-brennan")
+assert(VisibleRow(movedID) and saved.ui.folderCollapsed[folder.id])
+journal.search:Type("")
+assert(not VisibleRow(movedID))
+folderUI.headers[folder.id]:Click()
+assert(VisibleRow(movedID))
+folderUI:FolderMenu(folderUI.headers[folder.id])
+menuItems["Rename folder"]()
+folderUI.entry:Type("Friends")
+folderUI.saveButton:Click()
+assert(saved.folders[folder.id].name == "Friends" and saved.notes[movedID].folderID == folder.id)
+folderUI:FolderMenu(folderUI.headers[folder.id])
+menuItems["Remove folder (keep notes)"]()
+StaticPopupDialogs[popup.which].OnAccept(nil, popup.data)
+assert(saved.notes[movedID].folderID == nil and not saved.folders[folder.id])
+assert(saved.notes[movedID].body == "Folder movement must keep this text.")
+assert(saved.notes[movedID].tags[1] == "eacam-brennan")
+print("Folder UI: naming, right-click moves, drag-and-drop, collapse/search, rename and removal passed.")
 print("UI flow: loading, editor/reader, link creation, history, tags, search, trash, icon and reload passed.")
