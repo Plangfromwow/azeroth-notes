@@ -1,7 +1,7 @@
 # Azeroth Notes
 
 A standalone Markdown journal for **WoW Forever**, interface 16001. Version 0.4.0
-is the first playable prototype. It uses Blizzard's native portrait frame, buttons,
+is a preview release. It uses Blizzard's native portrait frame, buttons,
 inputs and scrollbars, with a parchment reading page and a quiet source editor.
 
 ## Open the journal
@@ -133,12 +133,29 @@ logout before backing up your SavedVariables.
 No companion app, external folder sync, or Obsidian connection exists yet.
 [PROJECT_DESIGN.md](PROJECT_DESIGN.md) describes those future phases.
 
-## Install and test
+## Install
 
-Copy the **AzerothNotes** directory into the Forever beta client's
-`Interface/AddOns` directory. Do not copy the surrounding project folder. Enable
-Azeroth Notes in the AddOns list and use `/anotes`. If a newly installed addon is
-not detected after `/reload`, restart the game client.
+1. Download `AzerothNotes-0.4.0.zip` from the
+   [GitHub releases page](https://github.com/Plangfromwow/azeroth-notes/releases).
+2. Close WoW and extract the ZIP into your WoW Forever client's
+   `_forever_/Interface/AddOns` directory. The resulting path should be
+   `_forever_/Interface/AddOns/AzerothNotes/AzerothNotes.toc`.
+3. Start WoW Forever, enable **Azeroth Notes** in the AddOns list, and type
+   `/anotes` to open the journal.
+
+For a source checkout, copy only the **AzerothNotes** directory into
+`_forever_/Interface/AddOns`, not the surrounding project folder. Restart the
+client if a newly installed addon does not appear after `/reload`.
+
+To update, close WoW, back up your account's `AzerothNotes.lua` SavedVariables
+file, then replace the installed **AzerothNotes** addon directory with the new
+version. Your notes are stored separately in `WTF`, not in the addon directory.
+
+This release targets WoW Forever interface **16001**. Other WoW clients are not
+tested. The addon was tested by its author in the Forever beta; verification in
+the current Forever client remains pending. See the editing limitations above.
+
+## In-game checks
 
 1. Open a note, click and edit a block in Live, then switch Source → Read → Live.
 2. Create two pages, use a `[[link]]` between them, then try Back.
@@ -162,3 +179,14 @@ Markdown conversion, and UI control flow with a simulated client.
 
 Run `python tests/run.py` with Python and `lupa` installed. The test runner uses
 LuaJIT's Lua 5.1 runtime. It does not launch WoW or perform visual verification.
+
+## Feedback
+
+Report bugs through [GitHub Issues](https://github.com/Plangfromwow/azeroth-notes/issues).
+Include the addon version, Forever client build, steps to reproduce, and the first
+Lua error, if any. Avoid posting your SavedVariables file unless you have removed
+private notes.
+
+## License
+
+Copyright (c) 2026 Plangfromwow. Released under the [MIT License](LICENSE).
